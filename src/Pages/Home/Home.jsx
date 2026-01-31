@@ -20,16 +20,65 @@ export default function Home() {
     const [page, setPage] = useState(1);
     const fileInputRef = useRef(null);
 
+    // Ref to track locally created posts that might not be in API yet
+    const localPostsRef = useRef([]);
+
     useEffect(() => {
         getPosts();
-    }, [page]);
+    }, [page, userData]);
 
-    async function getPosts() {
+    async function getPosts(preserveLocalPosts = true) {
         setLoading(true);
         try {
-            const { data } = await postsAPI.getAllPosts(50, page);
-            const sortedPosts = (data.posts || []).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-            setPosts(sortedPosts);
+            // Fetch both global posts and user's own posts
+            const [globalPostsRes, userPostsRes] = await Promise.all([
+                postsAPI.getAllPosts(50, page),
+                userData?._id ? postsAPI.getUserPosts(userData._id, 50) : Promise.resolve({ data: { posts: [] } })
+            ]);
+
+            const globalPosts = globalPostsRes.data.posts || [];
+            const userPosts = userPostsRes.data.posts || [];
+
+            // Merge and deduplicate posts
+            const allPostsMap = new Map();
+
+            // Add global posts first
+            globalPosts.forEach(post => {
+                allPostsMap.set(post._id || post.id, post);
+            });
+
+            // Add user's posts (overwrite if already exists)
+            userPosts.forEach(post => {
+                allPostsMap.set(post._id || post.id, post);
+            });
+
+            // If we should preserve local posts, add them too
+            if (preserveLocalPosts && localPostsRef.current.length > 0) {
+                // Check if local posts are now in the API response
+                const apiPostIds = new Set(allPostsMap.keys());
+
+                // Keep local posts that aren't in API yet
+                localPostsRef.current = localPostsRef.current.filter(localPost => {
+                    const localId = localPost._id || localPost.id;
+                    // Check if a post with similar content from same user exists
+                    const foundInApi = Array.from(allPostsMap.values()).some(apiPost =>
+                        apiPost.body === localPost.body &&
+                        (apiPost.user._id === localPost.user._id || apiPost.user._id === userData?._id)
+                    );
+                    return !foundInApi && !apiPostIds.has(localId);
+                });
+
+                // Add remaining local posts
+                localPostsRef.current.forEach(post => {
+                    allPostsMap.set(post._id || post.id, post);
+                });
+            }
+
+            // Convert back to array and sort by date (newest first)
+            const mergedPosts = Array.from(allPostsMap.values())
+                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+            setPosts(mergedPosts);
         } catch (err) {
             console.error(err);
         } finally {
@@ -52,10 +101,9 @@ export default function Home() {
             const response = await postsAPI.createPost(formData);
             toast.success('Post created successfully');
 
-            // Optimistically add the new post to the feed
-            // If the API returns the new post, use it; otherwise create a placeholder
+            // Get the new post from API response or create optimistic version
             const newPost = response.data?.post || {
-                _id: Date.now().toString(), // Temporary ID
+                _id: `local_${Date.now()}`, // Temporary ID with prefix
                 body: postContent,
                 image: imagePreview,
                 createdAt: new Date().toISOString(),
@@ -65,7 +113,11 @@ export default function Home() {
                     photo: userData?.photo,
                 },
                 comments: [],
+                likes: [],
             };
+
+            // Store in local posts ref to preserve during refreshes
+            localPostsRef.current = [newPost, ...localPostsRef.current];
 
             // Add new post to the beginning of the feed
             setPosts(prevPosts => [newPost, ...prevPosts]);
@@ -75,11 +127,10 @@ export default function Home() {
             setImagePreview(null);
             setShowModal(false);
 
-            // Also refresh from API to ensure data is synced
-            // Using a small delay to allow the backend to process
+            // Refresh from API after delay, but preserve local posts
             setTimeout(() => {
-                getPosts();
-            }, 1000);
+                getPosts(true);
+            }, 2000);
         } catch (err) {
             toast.error('Failed to create post');
             console.error(err);

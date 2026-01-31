@@ -26,7 +26,7 @@ export const authAPI = {
 
 export const postsAPI = {
     createPost: (postData) => api.post('/posts', postData), // form-data
-    getAllPosts: (limit = 50) => api.get(`/posts?limit=${limit}`),
+    getAllPosts: (limit = 50, page = 1) => api.get(`/posts?limit=${limit}&page=${page}`),
     getSinglePost: (postId) => api.get(`/posts/${postId}`),
     getUserPosts: (userId, limit = 2) => api.get(`/users/${userId}/posts?limit=${limit}`),
     updatePost: (postId, postData) => api.put(`/posts/${postId}`, postData),

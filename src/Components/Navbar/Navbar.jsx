@@ -19,7 +19,7 @@ export default function Navbar() {
         <nav className="sticky top-0 z-50 bg-white shadow-sm px-6 h-14 flex justify-between items-center border-b border-gray-100">
             {/* Left - Logo */}
             <div className="flex items-center gap-2">
-                <Link to="/" className="flex items-center gap-2">
+                <Link to="/home" className="flex items-center gap-2">
                     <img src={Logo} alt="Nexify" className="w-8 h-8 object-contain" />
                     <span className="text-[#4A90D9] text-xl font-bold hidden sm:inline">Nexify</span>
                 </Link>

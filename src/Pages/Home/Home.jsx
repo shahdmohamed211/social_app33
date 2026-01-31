@@ -17,15 +17,17 @@ export default function Home() {
     const [postImage, setPostImage] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
     const [creatingPost, setCreatingPost] = useState(false);
+    const [page, setPage] = useState(1);
     const fileInputRef = useRef(null);
 
     useEffect(() => {
         getPosts();
-    }, []);
+    }, [page]);
 
     async function getPosts() {
+        setLoading(true);
         try {
-            const { data } = await postsAPI.getAllPosts();
+            const { data } = await postsAPI.getAllPosts(50, page);
             const sortedPosts = (data.posts || []).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
             setPosts(sortedPosts);
         } catch (err) {
@@ -215,15 +217,39 @@ export default function Home() {
                 </div>
             )}
 
+
             {/* Posts Feed */}
             {loading ? (
                 <div className="flex justify-center py-10">
                     <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
                 </div>
             ) : posts.length > 0 ? (
-                posts.map(post => (
-                    <PostCard key={post._id || post.id} post={post} onDelete={refreshPosts} />
-                ))
+                <>
+                    {posts.map(post => (
+                        <PostCard key={post._id || post.id} post={post} onDelete={refreshPosts} />
+                    ))}
+
+                    {/* Pagination */}
+                    <div className="flex justify-center gap-2 mt-8 pb-8">
+                        <button
+                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                            disabled={page === 1}
+                            className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
+                        >
+                            Previous
+                        </button>
+                        <span className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-gray-800 font-medium">
+                            Page {page}
+                        </span>
+                        <button
+                            onClick={() => setPage(p => p + 1)}
+                            disabled={posts.length < 50} // Assuming limit 50, if less then it's last page
+                            className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
+                        >
+                            Next
+                        </button>
+                    </div>
+                </>
             ) : (
                 <div className="bg-white rounded-xl p-8 text-center text-gray-500 shadow-sm border border-gray-100">
                     <p className="font-medium">No posts yet</p>

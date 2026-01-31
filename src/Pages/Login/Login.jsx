@@ -5,12 +5,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import { UserContext } from '../../Context/UserContext';
 import { authAPI } from '../../Services/api';
 import toast from 'react-hot-toast';
-import Logo from '../../assets/logo.png';
+import logo from '../../assets/logo.png';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
 export default function Login() {
     const { saveToken } = useContext(UserContext);
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     const validationSchema = Yup.object({
         email: Yup.string().email('Invalid email address').required('Email is required'),
@@ -30,7 +32,7 @@ export default function Login() {
                 if (data.message === 'success') {
                     saveToken(data.token);
                     toast.success('Welcome back!');
-                    navigate('/');
+                    navigate('/home');
                 } else {
                     toast.error(data.message || 'Login failed');
                 }
@@ -54,7 +56,7 @@ export default function Login() {
 
                 {/* Logo */}
                 <div className="flex items-center gap-2 z-10">
-                    <img src={Logo} alt="Nexify" className="w-8 h-8 object-contain" />
+                    <img src={logo} alt="Nexify" className="w-8 h-8 object-contain" />
                     <span className="text-white text-xl font-semibold">Nexify</span>
                 </div>
 
@@ -106,9 +108,9 @@ export default function Login() {
                             )}
                         </div>
 
-                        <div>
+                        <div className="relative">
                             <input
-                                type="password"
+                                type={showPassword ? 'text' : 'password'}
                                 name="password"
                                 placeholder="Password*"
                                 className={`w-full px-4 py-3 rounded-lg border ${formik.touched.password && formik.errors.password ? 'border-red-400' : 'border-gray-200'} outline-none focus:border-blue-500 transition-colors text-gray-700 placeholder-gray-400`}
@@ -116,6 +118,13 @@ export default function Login() {
                                 onBlur={formik.handleBlur}
                                 value={formik.values.password}
                             />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600"
+                            >
+                                {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+                            </button>
                             {formik.touched.password && formik.errors.password && (
                                 <div className="text-red-500 text-xs mt-1">{formik.errors.password}</div>
                             )}

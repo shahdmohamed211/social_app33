@@ -8,8 +8,9 @@ import { UserContext } from '../../Context/UserContext';
 import { commentsAPI, postsAPI } from '../../Services/api';
 import toast from 'react-hot-toast';
 import EmojiPicker from 'emoji-picker-react';
+import { useNavigate } from 'react-router-dom';
 
-export default function PostCard({ post, onDelete }) {
+export default function PostCard({ post, onDelete, isDetailsPage = false }) {
     const { userData } = useContext(UserContext);
     const [comments, setComments] = useState([]);
     const [commentsLoaded, setCommentsLoaded] = useState(false);
@@ -44,10 +45,17 @@ export default function PostCard({ post, onDelete }) {
     const [isLiked, setIsLiked] = useState(post.likes?.includes(userData?._id || userData?.id) || false);
     const [likeCount, setLikeCount] = useState((post.likes?.length || 0) + initialLikeOffset);
 
+    const navigate = useNavigate();
+
     useEffect(() => {
         setIsLiked(post.likes?.includes(userData?._id || userData?.id) || false);
         setLikeCount((post.likes?.length || 0) + initialLikeOffset);
-    }, [post, userData, initialLikeOffset]);
+
+        if (isDetailsPage) {
+            loadComments();
+            setShowComments(true);
+        }
+    }, [post, userData, initialLikeOffset, isDetailsPage]);
 
 
     async function handleLike() {
@@ -90,17 +98,26 @@ export default function PostCard({ post, onDelete }) {
         } catch { return ''; }
     };
 
-    async function handleToggleComments() {
-        if (!showComments) {
-            if (!commentsLoaded) {
-                try {
-                    const { data } = await commentsAPI.getPostComments(post._id || post.id);
-                    setComments(data.comments || []);
-                    setCommentsLoaded(true);
-                } catch (err) {
-                    console.error(err);
-                }
+    async function loadComments() {
+        if (!commentsLoaded) {
+            try {
+                const { data } = await commentsAPI.getPostComments(post._id || post.id);
+                setComments(data.comments || []);
+                setCommentsLoaded(true);
+            } catch (err) {
+                console.error(err);
             }
+        }
+    }
+
+    async function handleToggleComments() {
+        if (!isDetailsPage) {
+            navigate(`/post/${post._id || post.id}`);
+            return;
+        }
+
+        if (!showComments) {
+            await loadComments();
         }
         setShowComments(!showComments);
     }

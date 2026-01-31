@@ -28,7 +28,7 @@ export default function SinglePost() {
     }
 
     const handleDelete = () => {
-        navigate('/');
+        navigate('/home');
     }
 
     if (loading) {
@@ -44,7 +44,7 @@ export default function SinglePost() {
             <div className="bg-white rounded-xl p-8 text-center shadow-sm border border-gray-100">
                 <p className="text-gray-500 font-medium">{error}</p>
                 <button
-                    onClick={() => navigate('/')}
+                    onClick={() => navigate('/home')}
                     className="mt-4 text-blue-500 hover:underline font-medium"
                 >
                     Go back to feed
@@ -61,7 +61,7 @@ export default function SinglePost() {
             >
                 <FaArrowLeft size={14} /> Back
             </button>
-            {post && <PostCard post={post} onDelete={handleDelete} />}
+            {post && <PostCard post={post} onDelete={handleDelete} isDetailsPage={true} />}
         </div>
     );
 }

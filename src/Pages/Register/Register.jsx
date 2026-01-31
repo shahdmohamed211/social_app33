@@ -5,10 +5,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import { authAPI } from '../../Services/api';
 import toast from 'react-hot-toast';
 import Logo from '../../assets/logo.png';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
 export default function Register() {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showRePassword, setShowRePassword] = useState(false);
 
     const validationSchema = Yup.object({
         name: Yup.string().required('Name is required').min(3, 'Too short'),
@@ -122,9 +125,9 @@ export default function Register() {
                             {formik.touched.email && formik.errors.email && <div className="text-red-500 text-xs mt-1">{formik.errors.email}</div>}
                         </div>
 
-                        <div>
+                        <div className="relative">
                             <input
-                                type="password"
+                                type={showPassword ? 'text' : 'password'}
                                 name="password"
                                 placeholder="Password*"
                                 className={`w-full px-4 py-3 rounded-lg border ${formik.touched.password && formik.errors.password ? 'border-red-400' : 'border-gray-200'} outline-none focus:border-blue-500 transition-colors text-gray-700 placeholder-gray-400`}
@@ -132,12 +135,19 @@ export default function Register() {
                                 onBlur={formik.handleBlur}
                                 value={formik.values.password}
                             />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600"
+                            >
+                                {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+                            </button>
                             {formik.touched.password && formik.errors.password && <div className="text-red-500 text-xs mt-1">{formik.errors.password}</div>}
                         </div>
 
-                        <div>
+                        <div className="relative">
                             <input
-                                type="password"
+                                type={showRePassword ? 'text' : 'password'}
                                 name="rePassword"
                                 placeholder="rePassword*"
                                 className={`w-full px-4 py-3 rounded-lg border ${formik.touched.rePassword && formik.errors.rePassword ? 'border-red-400' : 'border-gray-200'} outline-none focus:border-blue-500 transition-colors text-gray-700 placeholder-gray-400`}
@@ -145,6 +155,13 @@ export default function Register() {
                                 onBlur={formik.handleBlur}
                                 value={formik.values.rePassword}
                             />
+                            <button
+                                type="button"
+                                onClick={() => setShowRePassword(!showRePassword)}
+                                className="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600"
+                            >
+                                {showRePassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+                            </button>
                             {formik.touched.rePassword && formik.errors.rePassword && <div className="text-red-500 text-xs mt-1">{formik.errors.rePassword}</div>}
                         </div>
 

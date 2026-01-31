@@ -379,7 +379,23 @@ export default function PostCard({ post, onDelete, isDetailsPage = false }) {
                             </button>
                         </div>
                     </div>
-                    {/* Send Button only visible if typing? Or always? Keeping it clean as per screenshot implies enter or hidden button? Screenshot didn't show send button in input pill. But I'll keep invisible submit or minimal. I'll rely on Enter for now or add small send button if needed. Screenshot showed clean input. */}
+
+                    {/* Send Button */}
+                    <button
+                        type="submit"
+                        disabled={!commentContent.trim() || commentLoading}
+                        className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 flex-shrink-0
+                            ${commentContent.trim()
+                                ? 'bg-[#4A90D9] text-white hover:bg-[#3a7fc8] shadow-md hover:shadow-lg'
+                                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                            }`}
+                    >
+                        {commentLoading ? (
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        ) : (
+                            <IoSend size={16} className={commentContent.trim() ? '' : 'opacity-50'} />
+                        )}
+                    </button>
                 </form>
 
                 {showEmojiPicker && (

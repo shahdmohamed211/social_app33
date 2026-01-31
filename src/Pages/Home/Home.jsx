@@ -49,13 +49,37 @@ export default function Home() {
         }
 
         try {
-            await postsAPI.createPost(formData);
+            const response = await postsAPI.createPost(formData);
             toast.success('Post created successfully');
+
+            // Optimistically add the new post to the feed
+            // If the API returns the new post, use it; otherwise create a placeholder
+            const newPost = response.data?.post || {
+                _id: Date.now().toString(), // Temporary ID
+                body: postContent,
+                image: imagePreview,
+                createdAt: new Date().toISOString(),
+                user: {
+                    _id: userData?._id,
+                    name: userData?.name,
+                    photo: userData?.photo,
+                },
+                comments: [],
+            };
+
+            // Add new post to the beginning of the feed
+            setPosts(prevPosts => [newPost, ...prevPosts]);
+
             setPostContent('');
             setPostImage(null);
             setImagePreview(null);
             setShowModal(false);
-            getPosts();
+
+            // Also refresh from API to ensure data is synced
+            // Using a small delay to allow the backend to process
+            setTimeout(() => {
+                getPosts();
+            }, 1000);
         } catch (err) {
             toast.error('Failed to create post');
             console.error(err);
